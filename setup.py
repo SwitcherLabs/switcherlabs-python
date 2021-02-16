@@ -10,10 +10,16 @@ version_contents = {}
 with open(os.path.join(here, "switcherlabs", "version.py"), encoding="utf-8") as f:
     exec(f.read(), version_contents)
 
+readme = None
+with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
+    readme = f.read()
+
 setup(
     name="switcherlabs",
     version=version_contents["VERSION"],
     description="Python SDK for SwitcherLabs",
+    long_description=readme,
+    long_description_content_type="text/markdown",
     author="SwitcherLabs",
     author_email="support@switcherlabs.com",
     url="https://github.com/switcherlabs/switcherlabs-python",
