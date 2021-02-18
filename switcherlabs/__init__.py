@@ -68,6 +68,14 @@ class Client(object):
         self._overrides = {override['key']: override for override in response['overrides']}
         self._lastRefresh = now
 
+        # Remove stale identities
+        self._identities = dict(
+            filter(
+                lambda elem: elem[1]["fetched_at"] + self._identity_refresh_rate > now,
+                self._identities.items()
+            )
+        )
+
     def _fetch_identity(self, identifier):
         now = time.time()
 
