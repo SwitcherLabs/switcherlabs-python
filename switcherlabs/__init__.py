@@ -43,7 +43,7 @@ class Client(object):
 
         sdk_v = version.VERSION
         py_v = platform.python_version()
-        user_agent = "switcherlabs-python/%s python /%s" % (sdk_v, py_v)
+        user_agent = "switcherlabs-python/%s python/%s" % (sdk_v, py_v)
 
         headers["User-Agent"] = user_agent
 
