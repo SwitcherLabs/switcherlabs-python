@@ -30,9 +30,19 @@ class Client(object):
         self._headers = self._make_headers()
 
         self._flags = {}
+        self._flags_by_id = {}
         self._overrides = {}
         self._identities = {}
         self._lastRefresh = 0
+
+        self._operations = {
+            "==": lambda a, b: a == b,
+            "!=": lambda a, b: a != b,
+            "<": lambda a, b: a < b,
+            "<=": lambda a, b: a <= b,
+            ">": lambda a, b: a > b,
+            ">=": lambda a, b: a >= b,
+        }
 
         self._refresh_state()
 
@@ -65,6 +75,7 @@ class Client(object):
             "GET", "/sdk/initialize", self._headers)
 
         self._flags = {flag['key']: flag for flag in response['flags']}
+        self._flags_by_id = {flag['id']: flag for flag in response['flags']}
         self._overrides = {override['key']: override for override in response['overrides']}
         self._lastRefresh = now
 
@@ -93,6 +104,14 @@ class Client(object):
         return response
 
     def evaluate_flag(self, key, identifier=None):
+        """
+        Evaluation order:
+            1. Identity override (if identifier is specified)
+            2. Environment Override
+            3. The first passing dynamic rule
+            4. The flag default_value
+        """
+
         if key not in self._flags:
             raise Exception("flag requested does not exist")
 
@@ -105,5 +124,12 @@ class Client(object):
 
         if key in self._overrides:
             return self._overrides[key]["value"]
+
+        if len(self._flags[key]["dynamic_rules"]):
+            for rule in self._flags[key]["dynamic_rules"]:
+                expression_flag_key = self._flags_by_id[rule["expression"]["flag_id"]]["key"]
+                flag_value = self.evaluate_flag(expression_flag_key, identifier)
+                if self._operations[rule["expression"]["op"]](flag_value, rule["expression"]["value"]):
+                    return rule["value"]
 
         return self._flags[key]["value"]
