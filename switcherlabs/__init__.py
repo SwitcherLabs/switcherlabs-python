@@ -103,7 +103,7 @@ class Client(object):
 
         return response
 
-    def evaluate_flag(self, key, identifier=None):
+    def evaluate_flag(self, key, identifier=None, overrides={}):
         """
         Evaluation order:
             1. Identity override (if identifier is specified)
@@ -114,6 +114,9 @@ class Client(object):
 
         if key not in self._flags:
             raise Exception("flag requested does not exist")
+
+        if key in overrides:
+            return overrides[key]
 
         if identifier is not None:
             identity = self._fetch_identity(identifier)
@@ -128,7 +131,7 @@ class Client(object):
         if len(self._flags[key]["dynamic_rules"]):
             for rule in self._flags[key]["dynamic_rules"]:
                 expression_flag_key = self._flags_by_id[rule["expression"]["flag_id"]]["key"]
-                flag_value = self.evaluate_flag(expression_flag_key, identifier)
+                flag_value = self.evaluate_flag(expression_flag_key, identifier, overrides)
                 if self._operations[rule["expression"]["op"]](flag_value, rule["expression"]["value"]):
                     return rule["value"]
 
